@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "pages:build": "npx @cloudflare/next-on-pages"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

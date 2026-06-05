@@ -47,3 +47,35 @@ When a live project exists, regenerate it:
 Built in **offline/local-buildable** mode: `.env.local` holds placeholder values so `npm run build`
 and `npm run dev` work without live services. Live auth, AI streaming, and deploy smoke tests are
 pending the credential hand-off above.
+
+## Cloudflare Pages deploy
+
+### Build & deploy
+- Build command: `npm run pages:build` — runs `npx @cloudflare/next-on-pages` and produces `.vercel/output/static`.
+- Deploy: `npx wrangler pages deploy .vercel/output/static`
+- `wrangler.toml` sets `compatibility_flags = ["nodejs_compat"]`, which is required by the two AI route handlers that declare `export const runtime = 'nodejs'`.
+
+### KNOWN ISSUE — adapter version mismatch
+`@cloudflare/next-on-pages@1.13.16` peer-requires Next ≥ 14.3 (this project uses 14.2.35) and is
+deprecated upstream in favour of the OpenNext Cloudflare adapter (`@opennextjs/cloudflare`).
+**Before first deploy, either:**
+1. Bump Next.js to ≥ 14.3 (`npm install next@latest`), or
+2. Migrate to the OpenNext adapter (`npm install @opennextjs/cloudflare` and follow its docs).
+
+Validate that `npm run pages:build` succeeds without errors before deploying.
+
+### Environment variables
+Set these in the Cloudflare Pages dashboard (Settings → Environment variables).
+Copy names from `.env.local.example`:
+
+| Variable | Type | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Plain | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Plain | Supabase anon/public key |
+| `NEXT_PUBLIC_SITE_URL` | Plain | The Pages deployment URL (e.g. `https://on3oard-crm.pages.dev`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Encrypted secret | Supabase service role key |
+| `ANTHROPIC_API_KEY` | Encrypted secret | Anthropic API key |
+
+### Supabase Auth redirect allow-list
+After deploying, add the Pages URL (e.g. `https://on3oard-crm.pages.dev`) to:
+Supabase dashboard → Auth → URL Configuration → Redirect URLs allow-list.
