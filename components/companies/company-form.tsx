@@ -1,7 +1,8 @@
 'use client'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { EnrichBox } from '@/components/ai/enrich-box'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,8 +20,26 @@ export function CompanyForm({ openOnMount = false }: { openOnMount?: boolean }) 
   // Controlled state for Select fields (shadcn Select does not emit native form fields)
   const [industry, setIndustry] = useState<string>('')
   const [size, setSize] = useState<string>('')
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => { if (openOnMount) setOpen(true) }, [openOnMount])
+
+  function setField(name: string, value: unknown) {
+    if (typeof value !== 'string' || !value || !formRef.current) return
+    const el = formRef.current.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null
+    if (el) el.value = value
+  }
+
+  function applyEnrichment(data: Record<string, unknown>) {
+    setField('name', data.name)
+    setField('website', data.website)
+    setField('country', data.country)
+    setField('uen', data.uen)
+    setField('revenue_range', data.revenue_range)
+    setField('notes', data.notes)
+    if (typeof data.industry === 'string') setIndustry(data.industry)
+    if (typeof data.size === 'string') setSize(data.size)
+  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -63,7 +82,9 @@ export function CompanyForm({ openOnMount = false }: { openOnMount?: boolean }) 
         <DialogHeader>
           <DialogTitle className="font-display">Add company</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4 pt-2">
+        <form ref={formRef} onSubmit={onSubmit} className="space-y-4 pt-2">
+          <EnrichBox entity="company" onResult={applyEnrichment} />
+
           {/* Name */}
           <div className="space-y-1">
             <Label htmlFor="name">Name <span className="text-destructive">*</span></Label>

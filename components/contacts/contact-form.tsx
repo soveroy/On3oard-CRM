@@ -1,8 +1,9 @@
 'use client'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { EnrichBox } from '@/components/ai/enrich-box'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,8 +33,30 @@ export function ContactForm({
   const [contactType, setContactType] = useState<string>('')
   // Controlled Switch state
   const [doNotContact, setDoNotContact] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => { if (openOnMount) setOpen(true) }, [openOnMount])
+
+  function setField(name: string, value: unknown) {
+    if (typeof value !== 'string' || !value || !formRef.current) return
+    const el = formRef.current.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null
+    if (el) el.value = value
+  }
+
+  function applyEnrichment(data: Record<string, unknown>) {
+    setField('full_name', data.full_name)
+    setField('job_title', data.job_title)
+    setField('linkedin_url', data.linkedin_url)
+    setField('notes', data.notes)
+    if (typeof data.lead_source === 'string') setLeadSource(data.lead_source)
+    // Match the researched company name to an existing company in the list.
+    if (typeof data.company === 'string' && data.company) {
+      const needle = data.company.toLowerCase()
+      const match = companies.find((c) => c.name.toLowerCase().includes(needle) || needle.includes(c.name.toLowerCase()))
+      if (match) setCompanyId(match.id)
+      else toast.message(`No matching company for “${data.company}” — add it first to link, or set it manually.`)
+    }
+  }
 
   function resetForm() {
     setNameError(null)
@@ -95,7 +118,9 @@ export function ContactForm({
         <DialogHeader>
           <DialogTitle className="font-display">Add contact</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4 pt-2">
+        <form ref={formRef} onSubmit={onSubmit} className="space-y-4 pt-2">
+          <EnrichBox entity="contact" onResult={applyEnrichment} />
+
           {/* Full name */}
           <div className="space-y-1">
             <Label htmlFor="full_name">Name <span className="text-destructive">*</span></Label>
