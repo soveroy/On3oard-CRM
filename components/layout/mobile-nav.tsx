@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, Building2, Briefcase, CheckSquare, Settings } from 'lucide-react'
+import { Home, Users, Building2, Briefcase, CheckSquare, Mail, Settings } from 'lucide-react'
 
 const NAV = [
   { href: '/dashboard', label: 'Home', icon: Home },
@@ -9,6 +9,7 @@ const NAV = [
   { href: '/companies', label: 'Companies', icon: Building2 },
   { href: '/deals', label: 'Deals', icon: Briefcase },
   { href: '/activities', label: 'Tasks', icon: CheckSquare },
+  { href: '/campaigns', label: 'Campaigns', icon: Mail },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 

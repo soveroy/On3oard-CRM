@@ -342,6 +342,46 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          id: string; name: string; brief: string; subject_line: string
+          audience: string; status: string; model: string
+          created_by: string | null; created_at: string | null; updated_at: string | null
+        }
+        Insert: {
+          id?: string; name: string; brief: string; subject_line: string
+          audience?: string; status?: string; model?: string
+          created_by?: string | null; created_at?: string | null; updated_at?: string | null
+        }
+        Update: {
+          id?: string; name?: string; brief?: string; subject_line?: string
+          audience?: string; status?: string; model?: string
+          created_by?: string | null; created_at?: string | null; updated_at?: string | null
+        }
+        Relationships: []
+      }
+      campaign_emails: {
+        Row: {
+          id: string; campaign_id: string; contact_id: string | null
+          to_name: string; to_email: string; subject: string; body: string
+          status: string; sent_at: string | null; error: string | null; created_at: string | null
+        }
+        Insert: {
+          id?: string; campaign_id: string; contact_id?: string | null
+          to_name: string; to_email: string; subject: string; body: string
+          status?: string; sent_at?: string | null; error?: string | null; created_at?: string | null
+        }
+        Update: {
+          id?: string; campaign_id?: string; contact_id?: string | null
+          to_name?: string; to_email?: string; subject?: string; body?: string
+          status?: string; sent_at?: string | null; error?: string | null; created_at?: string | null
+        }
+        Relationships: [{
+          foreignKeyName: 'campaign_emails_campaign_id_fkey'
+          columns: ['campaign_id']; isOneToOne: false
+          referencedRelation: 'email_campaigns'; referencedColumns: ['id']
+        }]
+      }
       app_settings: {
         Row: {
           id: string
