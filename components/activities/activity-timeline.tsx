@@ -21,7 +21,7 @@ const OUTCOME_COLOR: Record<string, string> = {
   Positive: 'text-[#22c55e]', Neutral: 'text-white/60', Negative: 'text-[#f93f58]', 'No Response': 'text-white/40',
 }
 
-export function ActivityTimeline({ activities }: { activities: ActivityTimelineItem[] }) {
+export function ActivityTimeline({ activities, allowEmailDraft = true }: { activities: ActivityTimelineItem[]; allowEmailDraft?: boolean }) {
   if (!activities.length) return <p className="text-sm text-white/40">No activity logged yet.</p>
   return (
     <ul className="space-y-3">
@@ -45,7 +45,7 @@ export function ActivityTimeline({ activities }: { activities: ActivityTimelineI
                   Follow-up: {a.next_action}{a.next_action_due ? ` · ${shortDate(a.next_action_due)}` : ''}
                 </div>
               )}
-              <EmailDraftPanel activityId={a.id} />
+              {allowEmailDraft && <EmailDraftPanel activityId={a.id} />}
             </div>
           </li>
         )

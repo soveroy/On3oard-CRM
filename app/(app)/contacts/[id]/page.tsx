@@ -126,9 +126,11 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
       <section>
         <div className="mb-2 flex items-center justify-between gap-2">
           <h2 className="font-display text-lg">Activity</h2>
-          <LogActivityForm contactId={id} triggerLabel="+ Log activity" />
+          {contact.do_not_contact
+            ? <span className="text-xs text-white/40">Outreach disabled (Do Not Contact)</span>
+            : <LogActivityForm contactId={id} triggerLabel="+ Log activity" />}
         </div>
-        <ActivityTimeline activities={acts ?? []} />
+        <ActivityTimeline activities={acts ?? []} allowEmailDraft={!contact.do_not_contact} />
       </section>
     </div>
   )
