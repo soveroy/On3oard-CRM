@@ -1,0 +1,9 @@
+export const LEAD_SOURCES = ['Referral','LinkedIn','Event','Cold Outreach','Inbound','Former Colleague'] as const
+export const CONTACT_TYPES = ['Prospect','Active Client','Past Client','Partner','Referrer'] as const
+export const INDUSTRIES = ['FM','Marine','Healthcare','Education','F&B','Logistics','Other'] as const
+export const COMPANY_SIZES = ['1-10','11-50','51-200','201-500','500+'] as const
+export const ENGAGEMENT_TYPES = ['AI Strategy','ESG/Sustainability','Grant Advisory','Full 4D Engagement','Other'] as const
+export const PRIORITIES = ['High','Medium','Low'] as const
+export const LOST_REASONS = ['Price','Timing','Competitor','No Budget','No Response','Other'] as const
+export const ACTIVITY_TYPES = ['Call','Email','Meeting','WhatsApp','LinkedIn Message','Proposal Sent','Contract Sent','Note'] as const
+export const OUTCOMES = ['Positive','Neutral','Negative','No Response'] as const
