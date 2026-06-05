@@ -20,8 +20,8 @@ export const AI_MODELS: AiModel[] = [
   { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai', providerModel: 'gpt-4o', hint: 'OpenAI flagship' },
   { id: 'gpt-4o-mini', label: 'GPT-4o mini', provider: 'openai', providerModel: 'gpt-4o-mini', hint: 'Fast & cheap' },
   // Gemini (Google)
-  { id: 'gemini-2-flash', label: 'Gemini 2.0 Flash', provider: 'google', providerModel: 'gemini-2.0-flash', hint: 'Fast' },
-  { id: 'gemini-1-5-pro', label: 'Gemini 1.5 Pro', provider: 'google', providerModel: 'gemini-1.5-pro', hint: 'Capable' },
+  { id: 'gemini-2-5-pro', label: 'Gemini 2.5 Pro', provider: 'google', providerModel: 'gemini-2.5-pro', hint: 'Most capable' },
+  { id: 'gemini-2-flash', label: 'Gemini 2.0 Flash', provider: 'google', providerModel: 'gemini-2.0-flash', hint: 'Fast & cheap' },
   // DeepSeek
   { id: 'deepseek-chat', label: 'DeepSeek V3', provider: 'deepseek', providerModel: 'deepseek-chat', hint: 'General' },
   { id: 'deepseek-reasoner', label: 'DeepSeek R1', provider: 'deepseek', providerModel: 'deepseek-reasoner', hint: 'Reasoning' },
