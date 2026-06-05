@@ -1,7 +1,8 @@
-import { anthropic } from '@/lib/ai/anthropic'
-import { DEFAULT_MODEL, isValidModel } from '@/lib/ai/models'
+import { streamText } from 'ai'
 import { createClient } from '@/lib/supabase/server'
 import { buildFollowUpEmailPrompt } from '@/lib/ai/prompts'
+import { getModel, PROVIDER_ENV } from '@/lib/ai/models'
+import { resolveLanguageModel, providerConfigured } from '@/lib/ai/provider'
 
 export const runtime = 'nodejs'
 
@@ -16,11 +17,12 @@ export async function POST(req: Request) {
 
   const { activityId, model } = await req.json() as { activityId?: string; model?: string }
   if (!activityId) return new Response('Missing activityId', { status: 400 })
-  const chosenModel = isValidModel(model) ? model : DEFAULT_MODEL
 
-  // Note: triple-nested contacts(full_name,companies(name)) is simplified to
-  // contacts(full_name) to avoid hand-authored type depth issues.
-  // Company name is omitted from the prompt (passed as null).
+  const meta = getModel(model)
+  if (!providerConfigured(meta)) {
+    return new Response(`${meta.label} is not configured. Add ${PROVIDER_ENV[meta.provider]} to .env.local.`, { status: 400 })
+  }
+
   const { data: activity } = await supabase.from('activities')
     .select('type,subject,outcome,notes,deals(stage),contacts(full_name)')
     .eq('id', activityId).single()
@@ -36,18 +38,7 @@ export async function POST(req: Request) {
     dealStage: deal?.stage ?? null,
   })
 
-  try {
-    const stream = anthropic.messages.stream({ model: chosenModel, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
-    const encoder = new TextEncoder()
-    const body = new ReadableStream<Uint8Array>({
-      start(controller) {
-        stream.on('text', (t: string) => controller.enqueue(encoder.encode(t)))
-        stream.on('end', () => controller.close())
-        stream.on('error', (e: unknown) => controller.error(e))
-      },
-    })
-    return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
-  } catch {
-    return new Response('AI generation failed. Check ANTHROPIC_API_KEY.', { status: 500 })
-  }
+  const { model: languageModel } = resolveLanguageModel(meta.id)
+  const result = streamText({ model: languageModel, prompt, maxOutputTokens: 1024 })
+  return result.toTextStreamResponse()
 }
