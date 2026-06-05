@@ -5,6 +5,8 @@ import { sgd } from '@/lib/format/currency'
 import { shortDate, fromNow } from '@/lib/format/date'
 import { Badge } from '@/components/ui/badge'
 import { MeetingPrepDrawer } from '@/components/deals/meeting-prep-drawer'
+import { ActivityTimeline } from '@/components/activities/activity-timeline'
+import { LogActivityForm } from '@/components/activities/log-activity-form'
 
 type Embedded<T> = T | T[] | null
 function one<T>(v: Embedded<T>): T | null {
@@ -23,6 +25,8 @@ export default async function DealDetail({ params }: { params: Promise<{ id: str
 
   const company = one<{ id: string; name: string }>(deal.companies as never)
   const contact = one<{ id: string; full_name: string; job_title: string | null }>(deal.contacts as never)
+
+  const { data: acts } = await supabase.from('activities').select('id,type,subject,activity_date,outcome,notes,next_action,next_action_due').eq('deal_id', id).order('activity_date', { ascending: false })
 
   return (
     <div className="space-y-6">
@@ -77,10 +81,13 @@ export default async function DealDetail({ params }: { params: Promise<{ id: str
         </div>
       )}
 
-      {/* TODO(Phase 8): replace with <ActivityTimeline activities={...} /> for this deal */}
+      {/* Activity */}
       <section>
-        <h2 className="mb-2 font-display text-lg">Activity</h2>
-        <p className="text-sm text-white/40">Activity timeline coming in the Activities module.</p>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="font-display text-lg">Activity</h2>
+          <LogActivityForm dealId={deal.id} triggerLabel="+ Log activity" />
+        </div>
+        <ActivityTimeline activities={acts ?? []} />
       </section>
     </div>
   )

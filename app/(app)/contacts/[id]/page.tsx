@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Badge } from '@/components/ui/badge'
 import { sgd } from '@/lib/format/currency'
+import { ActivityTimeline } from '@/components/activities/activity-timeline'
+import { LogActivityForm } from '@/components/activities/log-activity-form'
 
 export default async function ContactDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -18,6 +20,8 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
     .from('deals')
     .select('id,name,stage,value_sgd')
     .eq('primary_contact_id', id)
+
+  const { data: acts } = await supabase.from('activities').select('id,type,subject,activity_date,outcome,notes,next_action,next_action_due').eq('contact_id', id).order('activity_date', { ascending: false })
 
   const companiesEmbed = contact.companies as { name: string } | null
 
@@ -118,11 +122,13 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
         ) : <p className="text-sm text-white/40">No deals linked yet.</p>}
       </section>
 
-      {/* Activity — placeholder */}
+      {/* Activity */}
       <section>
-        <h2 className="mb-2 font-display text-lg">Activity</h2>
-        {/* TODO(Phase 8): replace with <ActivityTimeline /> */}
-        <p className="text-sm text-white/40">Activity timeline coming in the Activities module.</p>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="font-display text-lg">Activity</h2>
+          <LogActivityForm contactId={id} triggerLabel="+ Log activity" />
+        </div>
+        <ActivityTimeline activities={acts ?? []} />
       </section>
     </div>
   )

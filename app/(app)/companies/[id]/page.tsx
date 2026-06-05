@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { sgd } from '@/lib/format/currency'
 import { Badge } from '@/components/ui/badge'
+import { ActivityTimeline } from '@/components/activities/activity-timeline'
 
 export default async function CompanyDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -11,6 +12,11 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
   if (!company) notFound()
   const { data: contacts } = await supabase.from('contacts').select('id,full_name,job_title').eq('company_id', id)
   const { data: deals } = await supabase.from('deals').select('id,name,stage,value_sgd').eq('company_id', id)
+
+  const dealIds = (deals ?? []).map((d) => d.id)
+  const { data: acts } = dealIds.length
+    ? await supabase.from('activities').select('id,type,subject,activity_date,outcome,notes,next_action,next_action_due').in('deal_id', dealIds).order('activity_date', { ascending: false })
+    : { data: [] as never[] }
 
   return (
     <div className="space-y-6">
@@ -51,10 +57,9 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
         ) : <p className="text-sm text-white/40">No deals yet.</p>}
       </section>
 
-      {/* TODO(Phase 8): replace with <ActivityTimeline /> for this company's deals' activities */}
       <section>
         <h2 className="mb-2 font-display text-lg">Activity</h2>
-        <p className="text-sm text-white/40">Activity timeline coming in the Activities module.</p>
+        <ActivityTimeline activities={acts ?? []} />
       </section>
     </div>
   )
