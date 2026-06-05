@@ -171,7 +171,7 @@ export function DealForm({
           {/* Value */}
           <div className="space-y-1">
             <Label htmlFor="value_sgd">Value (SGD)</Label>
-            <Input id="value_sgd" name="value_sgd" type="number" min={0} step={100} placeholder="50000" defaultValue={0} />
+            <Input id="value_sgd" name="value_sgd" type="number" min={0} step="any" inputMode="decimal" placeholder="50000" defaultValue={0} />
           </div>
 
           {/* Close date */}
