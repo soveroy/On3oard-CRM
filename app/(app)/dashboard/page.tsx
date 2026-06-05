@@ -20,10 +20,12 @@ function oneName(v: unknown): string | null {
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const { data: deals } = await supabase.from('deals')
-    .select('id,name,stage,value_sgd,probability,close_date,stage_changed_at,companies(name)')
-  const { data: pending } = await supabase.from('activities').select('id,next_action_due').not('next_action_due', 'is', null)
-  const { data: recent } = await supabase.from('activities').select('id,type,subject,activity_date').order('activity_date', { ascending: false }).limit(10)
+  // Run all reads in parallel — collapses 3 sequential round-trips into one.
+  const [{ data: deals }, { data: pending }, { data: recent }] = await Promise.all([
+    supabase.from('deals').select('id,name,stage,value_sgd,probability,close_date,stage_changed_at,companies(name)'),
+    supabase.from('activities').select('id,next_action_due').not('next_action_due', 'is', null),
+    supabase.from('activities').select('id,type,subject,activity_date').order('activity_date', { ascending: false }).limit(10),
+  ])
 
   const ds = deals ?? []
   const now = new Date()

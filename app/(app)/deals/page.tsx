@@ -12,12 +12,15 @@ import type { DealCardData } from '@/components/deals/deal-card'
 export default async function DealsPage({ searchParams }: { searchParams: Promise<{ new?: string }> }) {
   const { new: isNew } = await searchParams
   const supabase = await createClient()
-  const { data: rows } = await supabase.from('deals')
-    .select('id,name,stage,value_sgd,probability,close_date,priority,company_id,companies(name),activities(activity_date)')
-    .order('created_at', { ascending: false })
-  const { data: companies } = await supabase.from('companies').select('id,name')
-  const { data: contacts } = await supabase.from('contacts').select('id,full_name')
-  const { data: appSettings } = await supabase.from('app_settings').select('stale_threshold_days').eq('id', 'singleton').single()
+  // Run all reads in parallel — collapses 4 sequential round-trips into one.
+  const [{ data: rows }, { data: companies }, { data: contacts }, { data: appSettings }] = await Promise.all([
+    supabase.from('deals')
+      .select('id,name,stage,value_sgd,probability,close_date,priority,company_id,companies(name),activities(activity_date)')
+      .order('created_at', { ascending: false }),
+    supabase.from('companies').select('id,name'),
+    supabase.from('contacts').select('id,full_name'),
+    supabase.from('app_settings').select('stale_threshold_days').eq('id', 'singleton').single(),
+  ])
   const staleDays = appSettings?.stale_threshold_days ?? 14
 
   const now = new Date()
