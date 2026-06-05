@@ -11,6 +11,7 @@ import { PipelineBar } from '@/components/dashboard/pipeline-bar'
 import { RevenueTrend } from '@/components/dashboard/revenue-trend'
 import { ConversionFunnel } from '@/components/dashboard/conversion-funnel'
 import { TopDeals, type TopDeal } from '@/components/dashboard/top-deals'
+import { DealMixPie } from '@/components/dashboard/deal-mix-pie'
 import { RecentActivity } from '@/components/dashboard/recent-activity'
 
 function oneName(v: unknown): string | null {
@@ -65,6 +66,7 @@ export default async function DashboardPage() {
         <PipelineBar data={pipelineByStage(ds)} />
         <RevenueTrend data={revenueTrend(ds, 6, now)} />
         <ConversionFunnel data={conversionFunnel(ds)} />
+        <DealMixPie data={pipelineByStage(ds)} />
         <TopDeals deals={topOpen} />
       </div>
 
