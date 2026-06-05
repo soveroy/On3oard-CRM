@@ -15,7 +15,7 @@ export const AI_MODELS: AiModel[] = [
   // Claude (Anthropic)
   { id: 'claude-opus-4', label: 'Claude Opus 4', provider: 'anthropic', providerModel: 'claude-opus-4-20250514', hint: 'Deepest reasoning' },
   { id: 'claude-sonnet-4', label: 'Claude Sonnet 4', provider: 'anthropic', providerModel: 'claude-sonnet-4-20250514', hint: 'Balanced' },
-  { id: 'claude-haiku-3-5', label: 'Claude Haiku 3.5', provider: 'anthropic', providerModel: 'claude-3-5-haiku-20241022', hint: 'Fast & cheap' },
+  { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', provider: 'anthropic', providerModel: 'claude-haiku-4-5-20251001', hint: 'Fast & cheap' },
   // ChatGPT (OpenAI)
   { id: 'gpt-4o', label: 'GPT-4o', provider: 'openai', providerModel: 'gpt-4o', hint: 'OpenAI flagship' },
   { id: 'gpt-4o-mini', label: 'GPT-4o mini', provider: 'openai', providerModel: 'gpt-4o-mini', hint: 'Fast & cheap' },
