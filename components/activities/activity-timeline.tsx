@@ -1,5 +1,6 @@
 import { fromNow, shortDate, overdue } from '@/lib/format/date'
 import { Phone, Mail, Users, MessageCircle, Link2, FileText, FileSignature, StickyNote } from 'lucide-react'
+import { EmailDraftPanel } from '@/components/ai/email-draft-panel'
 
 export type ActivityTimelineItem = {
   id: string
@@ -44,6 +45,7 @@ export function ActivityTimeline({ activities }: { activities: ActivityTimelineI
                   Follow-up: {a.next_action}{a.next_action_due ? ` · ${shortDate(a.next_action_due)}` : ''}
                 </div>
               )}
+              <EmailDraftPanel activityId={a.id} />
             </div>
           </li>
         )
