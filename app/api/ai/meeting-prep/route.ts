@@ -1,4 +1,5 @@
-import { anthropic, MODEL } from '@/lib/ai/anthropic'
+import { anthropic } from '@/lib/ai/anthropic'
+import { DEFAULT_MODEL, isValidModel } from '@/lib/ai/models'
 import { createClient } from '@/lib/supabase/server'
 import { buildMeetingPrepPrompt } from '@/lib/ai/prompts'
 
@@ -13,8 +14,9 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
-  const { dealId } = await req.json() as { dealId?: string }
+  const { dealId, model } = await req.json() as { dealId?: string; model?: string }
   if (!dealId) return new Response('Missing dealId', { status: 400 })
+  const chosenModel = isValidModel(model) ? model : DEFAULT_MODEL
 
   const { data: deal } = await supabase.from('deals')
     .select('name,stage,value_sgd,engagement_type,companies(name,industry),contacts(full_name,job_title)')
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
   })
 
   try {
-    const stream = anthropic.messages.stream({ model: MODEL, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
+    const stream = anthropic.messages.stream({ model: chosenModel, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
     const encoder = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
       start(controller) {

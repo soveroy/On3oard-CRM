@@ -1,4 +1,5 @@
-import { anthropic, MODEL } from '@/lib/ai/anthropic'
+import { anthropic } from '@/lib/ai/anthropic'
+import { DEFAULT_MODEL, isValidModel } from '@/lib/ai/models'
 import { createClient } from '@/lib/supabase/server'
 import { buildFollowUpEmailPrompt } from '@/lib/ai/prompts'
 
@@ -13,8 +14,9 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response('Unauthorized', { status: 401 })
 
-  const { activityId } = await req.json() as { activityId?: string }
+  const { activityId, model } = await req.json() as { activityId?: string; model?: string }
   if (!activityId) return new Response('Missing activityId', { status: 400 })
+  const chosenModel = isValidModel(model) ? model : DEFAULT_MODEL
 
   // Note: triple-nested contacts(full_name,companies(name)) is simplified to
   // contacts(full_name) to avoid hand-authored type depth issues.
@@ -35,7 +37,7 @@ export async function POST(req: Request) {
   })
 
   try {
-    const stream = anthropic.messages.stream({ model: MODEL, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
+    const stream = anthropic.messages.stream({ model: chosenModel, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
     const encoder = new TextEncoder()
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
