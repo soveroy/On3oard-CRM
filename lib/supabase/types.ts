@@ -342,6 +342,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          id: string
+          stages: string[] | null
+          engagement_types: string[] | null
+          stale_threshold_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          stages?: string[] | null
+          engagement_types?: string[] | null
+          stale_threshold_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          stages?: string[] | null
+          engagement_types?: string[] | null
+          stale_threshold_days?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>

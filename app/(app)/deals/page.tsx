@@ -17,6 +17,8 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
     .order('created_at', { ascending: false })
   const { data: companies } = await supabase.from('companies').select('id,name')
   const { data: contacts } = await supabase.from('contacts').select('id,full_name')
+  const { data: appSettings } = await supabase.from('app_settings').select('stale_threshold_days').eq('id', 'singleton').single()
+  const staleDays = appSettings?.stale_threshold_days ?? 14
 
   const now = new Date()
   const deals: DealCardData[] = (rows ?? []).map((d) => {
@@ -28,7 +30,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
     return {
       id: d.id, name: d.name, company,
       value_sgd: d.value_sgd ?? 0, close_date: d.close_date,
-      priority: d.priority ?? 'Medium', stage: d.stage, health, stale: isStale(lastActivityAt, now),
+      priority: d.priority ?? 'Medium', stage: d.stage, health, stale: isStale(lastActivityAt, now, staleDays),
     }
   })
 
