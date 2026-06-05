@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -27,68 +27,59 @@ export function ContactForm({
   const [nameError, setNameError] = useState<string | null>(null)
   const [duplicateId, setDuplicateId] = useState<string | null>(null)
 
+  // Controlled state for AI-autofilled fields
+  const [fullName, setFullName] = useState('')
+  const [jobTitle, setJobTitle] = useState('')
+  const [linkedinUrl, setLinkedinUrl] = useState('')
+  const [notesVal, setNotesVal] = useState('')
   // Controlled Select state (shadcn Select does not emit native form fields)
   const [companyId, setCompanyId] = useState<string>('')
   const [leadSource, setLeadSource] = useState<string>('')
   const [contactType, setContactType] = useState<string>('')
   // Controlled Switch state
   const [doNotContact, setDoNotContact] = useState(false)
-  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => { if (openOnMount) setOpen(true) }, [openOnMount])
 
-  function setField(name: string, value: unknown) {
-    if (typeof value !== 'string' || !value || !formRef.current) return
-    const el = formRef.current.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | null
-    if (el) el.value = value
-  }
-
   function applyEnrichment(data: Record<string, unknown>) {
-    setField('full_name', data.full_name)
-    setField('job_title', data.job_title)
-    setField('linkedin_url', data.linkedin_url)
-    setField('notes', data.notes)
-    if (typeof data.lead_source === 'string') setLeadSource(data.lead_source)
-    // Match the researched company name to an existing company in the list.
+    if (typeof data.full_name === 'string' && data.full_name) setFullName(data.full_name)
+    if (typeof data.job_title === 'string' && data.job_title) setJobTitle(data.job_title)
+    if (typeof data.linkedin_url === 'string' && data.linkedin_url) setLinkedinUrl(data.linkedin_url)
+    if (typeof data.notes === 'string' && data.notes) setNotesVal(data.notes)
+    if (typeof data.lead_source === 'string' && data.lead_source) setLeadSource(data.lead_source)
     if (typeof data.company === 'string' && data.company) {
       const needle = data.company.toLowerCase()
       const match = companies.find((c) => c.name.toLowerCase().includes(needle) || needle.includes(c.name.toLowerCase()))
       if (match) setCompanyId(match.id)
-      else toast.message(`No matching company for “${data.company}” — add it first to link, or set it manually.`)
+      else toast.message(`Company “${data.company}” not in CRM yet — add it first or select manually.`)
     }
   }
 
   function resetForm() {
-    setNameError(null)
-    setDuplicateId(null)
-    setCompanyId('')
-    setLeadSource('')
-    setContactType('')
-    setDoNotContact(false)
+    setNameError(null); setDuplicateId(null)
+    setFullName(''); setJobTitle(''); setLinkedinUrl(''); setNotesVal('')
+    setCompanyId(''); setLeadSource(''); setContactType(''); setDoNotContact(false)
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setNameError(null)
-    setDuplicateId(null)
+    setNameError(null); setDuplicateId(null)
     const fd = new FormData(e.currentTarget)
-
     const splitTrim = (key: string) =>
       String(fd.get(key) ?? '').split(',').map((v) => v.trim()).filter(Boolean)
-
     const payload = {
-      full_name: String(fd.get('full_name') ?? ''),
-      job_title: String(fd.get('job_title') ?? '') || undefined,
+      full_name: fullName,
+      job_title: jobTitle || undefined,
       company_id: companyId || undefined,
       emails: splitTrim('emails'),
       phones: splitTrim('phones'),
-      linkedin_url: String(fd.get('linkedin_url') ?? '') || undefined,
+      linkedin_url: linkedinUrl || undefined,
       whatsapp: String(fd.get('whatsapp') ?? '') || undefined,
       lead_source: leadSource || undefined,
       contact_type: contactType || undefined,
       do_not_contact: doNotContact,
       tags: splitTrim('tags'),
-      notes: String(fd.get('notes') ?? '') || undefined,
+      notes: notesVal || undefined,
     }
 
     start(async () => {
@@ -118,20 +109,20 @@ export function ContactForm({
         <DialogHeader>
           <DialogTitle className="font-display">Add contact</DialogTitle>
         </DialogHeader>
-        <form ref={formRef} onSubmit={onSubmit} className="space-y-4 pt-2">
+        <form onSubmit={onSubmit} className="space-y-4 pt-2">
           <EnrichBox entity="contact" onResult={applyEnrichment} />
 
           {/* Full name */}
           <div className="space-y-1">
             <Label htmlFor="full_name">Name <span className="text-destructive">*</span></Label>
-            <Input id="full_name" name="full_name" placeholder="Joseph Lim" required />
+            <Input id="full_name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Joseph Lim" required />
             {nameError && <p className="text-xs text-destructive">{nameError}</p>}
           </div>
 
           {/* Job title */}
           <div className="space-y-1">
             <Label htmlFor="job_title">Job title</Label>
-            <Input id="job_title" name="job_title" placeholder="CEO" />
+            <Input id="job_title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="CEO" />
           </div>
 
           {/* Company */}
@@ -173,7 +164,7 @@ export function ContactForm({
           {/* LinkedIn */}
           <div className="space-y-1">
             <Label htmlFor="linkedin_url">LinkedIn URL</Label>
-            <Input id="linkedin_url" name="linkedin_url" type="url" placeholder="https://linkedin.com/in/…" />
+            <Input id="linkedin_url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} type="url" placeholder="https://linkedin.com/in/…" />
           </div>
 
           {/* WhatsApp */}
@@ -233,7 +224,7 @@ export function ContactForm({
           {/* Notes */}
           <div className="space-y-1">
             <Label htmlFor="notes">Notes</Label>
-            <Textarea id="notes" name="notes" rows={3} placeholder="Any additional context…" />
+            <Textarea id="notes" value={notesVal} onChange={(e) => setNotesVal(e.target.value)} rows={3} placeholder="Any additional context…" />
           </div>
 
           <DialogFooter>

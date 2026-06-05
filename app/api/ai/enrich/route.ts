@@ -54,7 +54,10 @@ export async function POST(req: Request) {
   if (!query?.trim()) return Response.json({ error: 'Enter something to research.' }, { status: 400 })
   if (entity !== 'company' && entity !== 'contact') return Response.json({ error: 'Invalid entity.' }, { status: 400 })
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    defaultHeaders: { 'anthropic-beta': 'web-search-2025-03-05' },
+  })
 
   try {
     const msg = await anthropic.messages.create({
