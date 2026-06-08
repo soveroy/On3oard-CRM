@@ -62,10 +62,12 @@ export default async function DashboardPage() {
         <MetricCard label="Overdue follow-ups" value={String(overdueCount)} href="/activities" danger={overdueCount > 0} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 pb-20 lg:grid-cols-2 lg:pb-0">
         <PipelineBar data={pipelineByStage(ds)} />
-        <RevenueTrend data={revenueTrend(ds, 6, now)} />
         <ConversionFunnel data={conversionFunnel(ds)} />
+        <div className="lg:col-span-2">
+          <RevenueTrend data={revenueTrend(ds, 6, now)} />
+        </div>
         <DealMixPie data={pipelineByStage(ds)} />
         <TopDeals deals={topOpen} />
       </div>

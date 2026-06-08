@@ -1,12 +1,21 @@
 'use client'
+import { useEffect, useState } from 'react'
 import {
   ComposedChart, Bar, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts'
 
 export function RevenueTrend({ data }: { data: { month: string; value: number }[] }) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640)
+  }, [])
+
+  const chartHeight = isMobile ? 250 : 300
+
   return (
-    <div className="h-80 rounded-lg border border-surface-border bg-surface-raised/30 p-4">
+    <div className="rounded-lg border border-surface-border bg-surface-raised/30 p-4" style={{ height: chartHeight + 40 }}>
       <h3 className="mb-3 text-sm font-medium text-white/70">Revenue — Won (last 6 months)</h3>
       <ResponsiveContainer width="100%" height="90%">
         <ComposedChart data={data} margin={{ left: 4, right: 8 }}>

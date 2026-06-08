@@ -1,12 +1,21 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts'
 
 // Gradient from bright (many leads) to deep green (won), visually funnelling down
 const FUNNEL_COLORS = ['#6366f1','#3b82f6','#06b6d4','#ff914d','#f59e0b','#22c55e']
 
 export function ConversionFunnel({ data }: { data: { stage: string; count: number }[] }) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 640)
+  }, [])
+
+  const chartHeight = isMobile ? 250 : 300
+
   return (
-    <div className="h-80 rounded-lg border border-surface-border bg-surface-raised/30 p-4">
+    <div className="rounded-lg border border-surface-border bg-surface-raised/30 p-4" style={{ height: chartHeight + 40 }}>
       <h3 className="mb-3 text-sm font-medium text-white/70">Conversion funnel</h3>
       <ResponsiveContainer width="100%" height="90%">
         <BarChart data={data} layout="vertical" margin={{ left: 10, right: 36 }}>

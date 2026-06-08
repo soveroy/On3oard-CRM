@@ -35,36 +35,65 @@ export function TopDeals({ deals }: { deals: TopDeal[] }) {
     <div className="rounded-lg border border-surface-border bg-surface-raised/30 p-4">
       <h3 className="mb-3 text-sm font-medium text-white/70">Top 5 open deals</h3>
       {deals.length ? (
-        <ul className="space-y-3">
-          {deals.map((d, i) => {
-            const sc = STAGE_COLORS[d.stage] ?? DEFAULT_STAGE
-            return (
-              <li key={d.id}>
-                <div className="flex items-start justify-between gap-2 text-sm">
-                  <div className="flex min-w-0 items-start gap-2">
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/5 text-[10px] font-bold text-white/40">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <Link href={`/deals/${d.id}`} className="font-medium text-white hover:text-brand-primary">
-                        {d.name}
-                      </Link>
-                      {d.company && <p className="truncate text-xs text-white/40">{d.company}</p>}
+        <>
+          {/* Desktop: List view with rank bar */}
+          <ul className="hidden space-y-3 md:block">
+            {deals.map((d, i) => {
+              const sc = STAGE_COLORS[d.stage] ?? DEFAULT_STAGE
+              return (
+                <li key={d.id}>
+                  <div className="flex items-start justify-between gap-2 text-sm">
+                    <div className="flex min-w-0 items-start gap-2">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/5 text-[10px] font-bold text-white/40">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <Link href={`/deals/${d.id}`} className="font-medium text-white hover:text-brand-primary">
+                          {d.name}
+                        </Link>
+                        {d.company && <p className="truncate text-xs text-white/40">{d.company}</p>}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <span className="font-medium text-brand-primary">{sgd(d.value_sgd)}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${sc.bg} ${sc.text}`}>{d.stage}</span>
+                        <span className="text-xs text-white/30">{shortDate(d.close_date)}</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="font-medium text-brand-primary">{sgd(d.value_sgd)}</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${sc.bg} ${sc.text}`}>{d.stage}</span>
-                      <span className="text-xs text-white/30">{shortDate(d.close_date)}</span>
+                  <RankBar value={d.value_sgd} max={max} />
+                </li>
+              )
+            })}
+          </ul>
+
+          {/* Mobile: Card list */}
+          <div className="space-y-2 md:hidden">
+            {deals.map((d) => {
+              const sc = STAGE_COLORS[d.stage] ?? DEFAULT_STAGE
+              return (
+                <Link
+                  key={d.id}
+                  href={`/deals/${d.id}`}
+                  className="block rounded-lg border border-surface-border bg-surface-raised/30 p-3 hover:bg-surface-raised/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-sm text-white truncate">{d.name}</h4>
+                      {d.company && <p className="text-xs text-white/60 truncate mt-0.5">{d.company}</p>}
                     </div>
+                    <span className="font-bold text-brand-primary whitespace-nowrap ml-2">{sgd(d.value_sgd)}</span>
                   </div>
-                </div>
-                <RankBar value={d.value_sgd} max={max} />
-              </li>
-            )
-          })}
-        </ul>
+                  <div className="flex items-center gap-1.5 justify-between">
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${sc.bg} ${sc.text}`}>{d.stage}</span>
+                    <span className="text-xs text-white/30">{shortDate(d.close_date)}</span>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </>
       ) : <p className="text-sm text-white/40">No open deals.</p>}
     </div>
   )
