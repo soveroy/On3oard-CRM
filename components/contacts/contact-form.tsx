@@ -109,7 +109,7 @@ export function ContactForm({
         <DialogHeader>
           <DialogTitle className="font-display">Add contact</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4 pt-2">
+        <form onSubmit={onSubmit} className="space-y-4 pt-2 pb-20 md:pb-0">
           <EnrichBox entity="contact" onResult={applyEnrichment} />
 
           {/* Full name */}
@@ -227,9 +227,9 @@ export function ContactForm({
             <Textarea id="notes" value={notesVal} onChange={(e) => setNotesVal(e.target.value)} rows={3} placeholder="Any additional context…" />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => { setOpen(false); resetForm() }}>Cancel</Button>
-            <Button type="submit" disabled={pending} className="bg-brand-primary text-white hover:bg-brand-primary/90">
+          <DialogFooter className="fixed md:static bottom-0 left-0 right-0 md:flex gap-2 md:p-0 p-4 bg-surface-raised/95 md:bg-transparent border-t md:border-t-0 border-surface-border md:border-none">
+            <Button type="button" variant="ghost" onClick={() => { setOpen(false); resetForm() }} className="w-full md:w-auto px-4 py-3">Cancel</Button>
+            <Button type="submit" disabled={pending} className="w-full md:w-auto px-4 py-3 bg-brand-primary text-white hover:bg-brand-primary/90">
               {pending ? 'Creating…' : 'Create contact'}
             </Button>
           </DialogFooter>

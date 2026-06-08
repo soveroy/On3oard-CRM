@@ -77,7 +77,7 @@ export function CompanyForm({ openOnMount = false }: { openOnMount?: boolean }) 
         <DialogHeader>
           <DialogTitle className="font-display">Add company</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4 pt-2">
+        <form onSubmit={onSubmit} className="space-y-4 pt-2 pb-20 md:pb-0">
           <EnrichBox entity="company" onResult={applyEnrichment} />
 
           <div className="space-y-1">
@@ -132,9 +132,9 @@ export function CompanyForm({ openOnMount = false }: { openOnMount?: boolean }) 
             <Input id="tags" name="tags" placeholder="e.g. vip, partner (comma-separated)" />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => { setOpen(false); resetForm() }}>Cancel</Button>
-            <Button type="submit" disabled={pending} className="bg-brand-primary text-white hover:bg-brand-primary/90">
+          <DialogFooter className="fixed md:static bottom-0 left-0 right-0 md:flex gap-2 md:p-0 p-4 bg-surface-raised/95 md:bg-transparent border-t md:border-t-0 border-surface-border md:border-none">
+            <Button type="button" variant="ghost" onClick={() => { setOpen(false); resetForm() }} className="w-full md:w-auto px-4 py-3">Cancel</Button>
+            <Button type="submit" disabled={pending} className="w-full md:w-auto px-4 py-3 bg-brand-primary text-white hover:bg-brand-primary/90">
               {pending ? 'Creating…' : 'Create company'}
             </Button>
           </DialogFooter>
