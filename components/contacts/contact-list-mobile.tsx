@@ -10,7 +10,7 @@ interface Contact {
   full_name: string
   email?: string
   phone?: string
-  company_id?: string
+  company_id?: string | null
 }
 
 interface ContactListMobileProps {
