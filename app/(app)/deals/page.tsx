@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { KanbanBoard } from '@/components/deals/kanban-board'
 import { DealList } from '@/components/deals/deal-list'
 import { DealForm } from '@/components/deals/deal-form'
 import { EmptyState } from '@/components/brand/empty-state'
+import { DealsPageClient } from './deals-page-client'
 import { healthScore } from '@/lib/domain/health-score'
 import { isStale } from '@/lib/domain/stale'
 import type { Stage } from '@/lib/domain/stages'
@@ -24,7 +24,7 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
   const staleDays = appSettings?.stale_threshold_days ?? 14
 
   const now = new Date()
-  const deals: DealCardData[] = (rows ?? []).map((d) => {
+  const deals: (DealCardData & { close_date: string | null })[] = (rows ?? []).map((d) => {
     const company = Array.isArray(d.companies) ? d.companies[0]?.name ?? null : (d.companies as { name: string } | null)?.name ?? null
     const dates = (d.activities ?? []).map((a) => a.activity_date).filter((x): x is string => Boolean(x))
     const lastActivityAt = dates.length ? dates.reduce((a, b) => (a > b ? a : b)) : null
@@ -46,14 +46,24 @@ export default async function DealsPage({ searchParams }: { searchParams: Promis
       {deals.length === 0 ? (
         <EmptyState title="No deals yet" hint="Create your first deal to start tracking your pipeline." />
       ) : (
-        <Tabs defaultValue="board">
-          <TabsList>
-            <TabsTrigger value="board">Board</TabsTrigger>
-            <TabsTrigger value="list">List</TabsTrigger>
-          </TabsList>
-          <TabsContent value="board"><KanbanBoard initialDeals={deals} /></TabsContent>
-          <TabsContent value="list"><DealList deals={deals} /></TabsContent>
-        </Tabs>
+        <>
+          {/* Desktop: Tabs with Kanban and List views */}
+          <div className="hidden md:block">
+            <Tabs defaultValue="board">
+              <TabsList>
+                <TabsTrigger value="board">Board</TabsTrigger>
+                <TabsTrigger value="list">List</TabsTrigger>
+              </TabsList>
+              <TabsContent value="board"><DealsPageClient initialDeals={deals} /></TabsContent>
+              <TabsContent value="list"><DealList deals={deals} /></TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Mobile: Only card list view */}
+          <div className="md:hidden">
+            <DealsPageClient initialDeals={deals} />
+          </div>
+        </>
       )}
     </div>
   )

@@ -39,7 +39,7 @@ export function KanbanBoard({ initialDeals }: { initialDeals: DealCardData[] }) 
   }
 
   return (
-    <>
+    <div className="hidden md:block">
       <DndContext sensors={sensors} onDragEnd={onDragEnd}>
         <div className="flex gap-3 overflow-x-auto pb-4">
           {DEFAULT_STAGES.map((stage) => (
@@ -52,6 +52,6 @@ export function KanbanBoard({ initialDeals }: { initialDeals: DealCardData[] }) 
         onCancel={() => setPendingLost(null)}
         onConfirm={(reason) => { if (pendingLost) void commitMove(pendingLost.id, pendingLost.from, 'Lost' as Stage, reason); setPendingLost(null) }}
       />
-    </>
+    </div>
   )
 }

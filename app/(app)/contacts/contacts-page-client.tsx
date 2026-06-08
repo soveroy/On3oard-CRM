@@ -1,5 +1,4 @@
 'use client'
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ContactTable, type ContactRow } from '@/components/contacts/contact-table'
 import { ContactListMobile } from '@/components/contacts/contact-list-mobile'

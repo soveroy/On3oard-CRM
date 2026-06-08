@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { ContactTable } from '@/components/contacts/contact-table'
 import { ContactForm } from '@/components/contacts/contact-form'
-import { ContactListMobile } from '@/components/contacts/contact-list-mobile'
 import { ContactsPageClient } from './contacts-page-client'
 import { EmptyState } from '@/components/brand/empty-state'
 
