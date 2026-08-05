@@ -48,6 +48,8 @@ export type Database = {
           owner_id: string | null
           tags: string[] | null
           notes: string | null
+          address: string | null
+          discovery_source_url: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -63,6 +65,8 @@ export type Database = {
           owner_id?: string | null
           tags?: string[] | null
           notes?: string | null
+          address?: string | null
+          discovery_source_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -78,6 +82,8 @@ export type Database = {
           owner_id?: string | null
           tags?: string[] | null
           notes?: string | null
+          address?: string | null
+          discovery_source_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -108,6 +114,22 @@ export type Database = {
           tags: string[] | null
           last_contacted_at: string | null
           notes: string | null
+          prospect_lead_id: string | null
+          best_employee: string | null
+          best_score: number | null
+          hana_score: number | null
+          felix_score: number | null
+          aria_score: number | null
+          prospect_approved_at: string | null
+          prospect_approval_hash: string | null
+          prospect_synced_at: string | null
+          prospect_contact_key: string | null
+          decision_employee: string | null
+          decision_confidence: number | null
+          decision_evidence_url: string | null
+          decision_evidence_text: string | null
+          decision_status: string | null
+          decision_review_reason: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -127,6 +149,22 @@ export type Database = {
           tags?: string[] | null
           last_contacted_at?: string | null
           notes?: string | null
+          prospect_lead_id?: string | null
+          best_employee?: string | null
+          best_score?: number | null
+          hana_score?: number | null
+          felix_score?: number | null
+          aria_score?: number | null
+          prospect_approved_at?: string | null
+          prospect_approval_hash?: string | null
+          prospect_synced_at?: string | null
+          prospect_contact_key?: string | null
+          decision_employee?: string | null
+          decision_confidence?: number | null
+          decision_evidence_url?: string | null
+          decision_evidence_text?: string | null
+          decision_status?: string | null
+          decision_review_reason?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -146,6 +184,22 @@ export type Database = {
           tags?: string[] | null
           last_contacted_at?: string | null
           notes?: string | null
+          prospect_lead_id?: string | null
+          best_employee?: string | null
+          best_score?: number | null
+          hana_score?: number | null
+          felix_score?: number | null
+          aria_score?: number | null
+          prospect_approved_at?: string | null
+          prospect_approval_hash?: string | null
+          prospect_synced_at?: string | null
+          prospect_contact_key?: string | null
+          decision_employee?: string | null
+          decision_confidence?: number | null
+          decision_evidence_url?: string | null
+          decision_evidence_text?: string | null
+          decision_status?: string | null
+          decision_review_reason?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -365,22 +419,121 @@ export type Database = {
           id: string; campaign_id: string; contact_id: string | null
           to_name: string; to_email: string; subject: string; body: string
           status: string; sent_at: string | null; error: string | null; created_at: string | null
+          provider_message_id: string | null; delivery_status: string | null
+          delivered_at: string | null; bounced_at: string | null; complained_at: string | null
+          unsubscribe_token: string; unsubscribed_at: string | null
         }
         Insert: {
           id?: string; campaign_id: string; contact_id?: string | null
           to_name: string; to_email: string; subject: string; body: string
           status?: string; sent_at?: string | null; error?: string | null; created_at?: string | null
+          provider_message_id?: string | null; delivery_status?: string | null
+          delivered_at?: string | null; bounced_at?: string | null; complained_at?: string | null
+          unsubscribe_token?: string; unsubscribed_at?: string | null
         }
         Update: {
           id?: string; campaign_id?: string; contact_id?: string | null
           to_name?: string; to_email?: string; subject?: string; body?: string
           status?: string; sent_at?: string | null; error?: string | null; created_at?: string | null
+          provider_message_id?: string | null; delivery_status?: string | null
+          delivered_at?: string | null; bounced_at?: string | null; complained_at?: string | null
+          unsubscribe_token?: string; unsubscribed_at?: string | null
         }
         Relationships: [{
           foreignKeyName: 'campaign_emails_campaign_id_fkey'
           columns: ['campaign_id']; isOneToOne: false
           referencedRelation: 'email_campaigns'; referencedColumns: ['id']
         }]
+      }
+      suppression_entries: {
+        Row: {
+          id: string; suppression_type: string; value: string; reason: string; source: string
+          contact_id: string | null; active: boolean; metadata: Json; created_by: string | null
+          created_at: string; updated_at: string
+        }
+        Insert: {
+          id?: string; suppression_type: string; value: string; reason: string; source?: string
+          contact_id?: string | null; active?: boolean; metadata?: Json; created_by?: string | null
+          created_at?: string; updated_at?: string
+        }
+        Update: {
+          id?: string; suppression_type?: string; value?: string; reason?: string; source?: string
+          contact_id?: string | null; active?: boolean; metadata?: Json; created_by?: string | null
+          created_at?: string; updated_at?: string
+        }
+        Relationships: []
+      }
+      email_events: {
+        Row: {
+          id: string; webhook_id: string; event_type: string; provider_message_id: string | null
+          recipient: string | null; campaign_email_id: string | null; payload: Json
+          occurred_at: string | null; created_at: string
+        }
+        Insert: {
+          id?: string; webhook_id: string; event_type: string; provider_message_id?: string | null
+          recipient?: string | null; campaign_email_id?: string | null; payload: Json
+          occurred_at?: string | null; created_at?: string
+        }
+        Update: {
+          id?: string; webhook_id?: string; event_type?: string; provider_message_id?: string | null
+          recipient?: string | null; campaign_email_id?: string | null; payload?: Json
+          occurred_at?: string | null; created_at?: string
+        }
+        Relationships: []
+      }
+      prospect_imports: {
+        Row: {
+          id: string
+          source_system: string
+          source_lead_id: string
+          company_id: string | null
+          contact_id: string | null
+          action: string
+          content_hash: string
+          metadata: Json
+          error: string | null
+          imported_at: string
+        }
+        Insert: {
+          id?: string
+          source_system?: string
+          source_lead_id: string
+          company_id?: string | null
+          contact_id?: string | null
+          action: string
+          content_hash: string
+          metadata?: Json
+          error?: string | null
+          imported_at?: string
+        }
+        Update: {
+          id?: string
+          source_system?: string
+          source_lead_id?: string
+          company_id?: string | null
+          contact_id?: string | null
+          action?: string
+          content_hash?: string
+          metadata?: Json
+          error?: string | null
+          imported_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'prospect_imports_company_id_fkey'
+            columns: ['company_id']
+            isOneToOne: false
+            referencedRelation: 'companies'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'prospect_imports_contact_id_fkey'
+            columns: ['contact_id']
+            isOneToOne: false
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+        ]
       }
       app_settings: {
         Row: {

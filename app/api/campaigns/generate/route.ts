@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getModel, PROVIDER_ENV } from '@/lib/ai/models'
 import { resolveLanguageModel, providerConfigured } from '@/lib/ai/provider'
 import { generateText } from 'ai'
+import { suppressionReason } from '@/lib/integrations/suppression'
 
 export const runtime = 'nodejs'
 
@@ -40,12 +41,23 @@ export async function POST(req: Request) {
   // Load eligible contacts (must have at least one email, not Do Not Contact)
   const types = AUDIENCE_FILTER[campaign.audience as keyof typeof AUDIENCE_FILTER] ?? AUDIENCE_FILTER['all']!
   const { data: contacts } = await supabase.from('contacts')
-    .select('id,full_name,job_title,emails,companies(name)')
+    .select('id,full_name,job_title,emails,decision_status,companies(name)')
     .in('contact_type', types as readonly (string | null)[])
     .eq('do_not_contact', false)
     .not('emails', 'eq', '{}')
 
-  if (!contacts?.length) {
+  const { data: suppressions } = await supabase
+    .from('suppression_entries')
+    .select('suppression_type,value,active')
+    .eq('active', true)
+  const eligibleContacts = (contacts ?? []).filter((contact) => {
+    const email = contact.emails?.[0]
+    return email
+      && contact.decision_status !== 'rejected'
+      && !suppressionReason(email, suppressions ?? [])
+  })
+
+  if (!eligibleContacts.length) {
     await supabase.from('email_campaigns').update({ status: 'review' }).eq('id', campaignId)
     return Response.json({ generated: 0, message: 'No eligible contacts found (check contact types and Do Not Contact flags)' })
   }
@@ -65,8 +77,8 @@ export async function POST(req: Request) {
   const BATCH = 10
   let generated = 0
 
-  for (let i = 0; i < contacts.length; i += BATCH) {
-    const batch = contacts.slice(i, i + BATCH)
+  for (let i = 0; i < eligibleContacts.length; i += BATCH) {
+    const batch = eligibleContacts.slice(i, i + BATCH)
     await Promise.allSettled(batch.map(async (c) => {
       const company = Array.isArray(c.companies)
         ? (c.companies[0] as { name: string } | undefined)?.name ?? null

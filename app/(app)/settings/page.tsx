@@ -6,14 +6,31 @@ import { ListEditor } from '@/components/settings/list-editor'
 import { TagsManager } from '@/components/settings/tags-manager'
 import { ProfileForm } from '@/components/settings/profile-form'
 import { StaleThresholdForm } from '@/components/settings/stale-threshold-form'
+import { OutreachReadiness } from '@/components/settings/outreach-readiness'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = user ? await supabase.from('users').select('full_name,email,avatar_url,role').eq('id', user.id).single() : { data: null }
-  const { data: settings } = await supabase.from('app_settings').select('*').eq('id', 'singleton').single()
-  const { data: tags } = await supabase.from('tags').select('id,name').order('name')
-  const { data: team } = await supabase.from('users').select('id,full_name,email,role').order('full_name')
+  const [profileResult, settingsResult, tagsResult, teamResult, suppressionsResult, eventsResult] = await Promise.all([
+    user ? supabase.from('users').select('full_name,email,avatar_url,role').eq('id', user.id).single() : Promise.resolve({ data: null }),
+    supabase.from('app_settings').select('*').eq('id', 'singleton').single(),
+    supabase.from('tags').select('id,name').order('name'),
+    supabase.from('users').select('id,full_name,email,role').order('full_name'),
+    supabase.from('suppression_entries').select('id,suppression_type,value,reason,source,created_at').eq('active', true).order('created_at', { ascending: false }),
+    supabase.from('email_events').select('event_type'),
+  ])
+  const profile = profileResult.data
+  const settings = settingsResult.data
+  const tags = tagsResult.data
+  const team = teamResult.data
+  const eventTypes = eventsResult.data ?? []
+  const deliveryHealth = {
+    delivered: eventTypes.filter((event) => event.event_type === 'email.delivered').length,
+    bounced: eventTypes.filter((event) => event.event_type === 'email.bounced').length,
+    complained: eventTypes.filter((event) => event.event_type === 'email.complained').length,
+    failed: eventTypes.filter((event) => event.event_type === 'email.failed').length,
+    tableReady: !eventsResult.error && !suppressionsResult.error,
+  }
 
   const stages = settings?.stages ?? [...DEFAULT_STAGES]
   const engagement = settings?.engagement_types ?? [...ENGAGEMENT_TYPES]
@@ -41,6 +58,13 @@ export default async function SettingsPage() {
 
       <Section title="Stale deal threshold" desc="Days without activity before a deal is flagged stale.">
         <StaleThresholdForm initial={staleDays} />
+      </Section>
+
+      <Section title="Outreach readiness" desc="Manage do-not-contact rules and monitor Resend delivery events.">
+        <OutreachReadiness
+          initialSuppressions={(suppressionsResult.data ?? []) as never[]}
+          deliveryHealth={deliveryHealth}
+        />
       </Section>
 
       <Section title="Team members">

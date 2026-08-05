@@ -1,23 +1,25 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { ContactTable, type ContactRow } from '@/components/contacts/contact-table'
-import { ContactListMobile } from '@/components/contacts/contact-list-mobile'
+import { ContactList } from '@/components/contacts/contact-list'
 
-interface ContactMobile {
+interface Contact {
   id: string
   full_name: string
-  email?: string
-  phone?: string
+  job_title?: string | null
+  contact_type?: string | null
+  do_not_contact?: boolean | null
+  last_contacted_at?: string | null
+  emails?: string[] | null
+  phones?: string[] | null
   company_id?: string | null
+  companies?: { name: string } | null
 }
 
 export function ContactsPageClient({
-  contactsDesktop,
-  contactsMobile,
+  contacts,
   companiesMap,
 }: {
-  contactsDesktop: ContactRow[]
-  contactsMobile: ContactMobile[]
+  contacts: Contact[]
   companiesMap: Record<string, string>
 }) {
   const router = useRouter()
@@ -31,28 +33,29 @@ export function ContactsPageClient({
   }
 
   const handleDeleteContact = (id: string) => {
-    // TODO: Implement delete functionality
-    // This would typically open a confirmation dialog and call a server action
     console.log('Delete contact:', id)
   }
 
-  return (
-    <>
-      {/* Desktop: table */}
-      <div className="hidden md:block">
-        <ContactTable contacts={contactsDesktop} />
-      </div>
+  const normalizedContacts = contacts.map(c => ({
+    id: c.id,
+    full_name: c.full_name,
+    job_title: c.job_title,
+    contact_type: c.contact_type,
+    do_not_contact: c.do_not_contact,
+    last_contacted_at: c.last_contacted_at,
+    email: c.emails?.[0],
+    phone: c.phones?.[0],
+    company_id: c.company_id,
+    company_name: c.companies?.name,
+  }))
 
-      {/* Mobile: card list */}
-      <div className="md:hidden">
-        <ContactListMobile
-          contacts={contactsMobile}
-          onAddClick={handleAddContact}
-          onEditClick={handleEditContact}
-          onDeleteClick={handleDeleteContact}
-          companies={companiesMap}
-        />
-      </div>
-    </>
+  return (
+    <ContactList
+      contacts={normalizedContacts}
+      onAddClick={handleAddContact}
+      onEditClick={handleEditContact}
+      onDeleteClick={handleDeleteContact}
+      companiesMap={companiesMap}
+    />
   )
 }

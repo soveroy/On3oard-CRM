@@ -24,6 +24,11 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
   const { data: acts } = await supabase.from('activities').select('id,type,subject,activity_date,outcome,notes,next_action,next_action_due').eq('contact_id', id).order('activity_date', { ascending: false })
 
   const companiesEmbed = contact.companies as { name: string } | null
+  const scoreRows = [
+    ['Hana', contact.hana_score],
+    ['Felix', contact.felix_score],
+    ['Aria', contact.aria_score],
+  ] as const
 
   return (
     <div className="space-y-6">
@@ -82,6 +87,89 @@ export default async function ContactDetail({ params }: { params: Promise<{ id: 
           ) : null}
         </dl>
       </section>
+
+      {contact.prospect_lead_id && (
+        <section className="space-y-3">
+          <div>
+            <h2 className="font-display text-lg">Prospect intelligence</h2>
+            <p className="text-xs text-white/45">Structured data synchronized from On3oard Prospect Platform.</p>
+          </div>
+          <div className="grid gap-px overflow-hidden rounded-lg border border-surface-border bg-surface-border md:grid-cols-4">
+            <div className="bg-[#0D1B2A] p-3">
+              <span className="block text-xs text-white/45">Best employee</span>
+              <strong className="mt-1 block capitalize text-brand-primary">{contact.best_employee ?? '-'}</strong>
+            </div>
+            <div className="bg-[#0D1B2A] p-3">
+              <span className="block text-xs text-white/45">Best score</span>
+              <strong className="mt-1 block">{contact.best_score ?? '-'}</strong>
+            </div>
+            <div className="bg-[#0D1B2A] p-3">
+              <span className="block text-xs text-white/45">Prospect lead ID</span>
+              <strong className="mt-1 block font-mono text-xs">{contact.prospect_lead_id}</strong>
+            </div>
+            <div className="bg-[#0D1B2A] p-3">
+              <span className="block text-xs text-white/45">Last synchronized</span>
+              <strong className="mt-1 block text-sm">
+                {contact.prospect_synced_at ? new Date(contact.prospect_synced_at).toLocaleString('en-SG') : '-'}
+              </strong>
+            </div>
+          </div>
+          <div className="grid max-w-2xl gap-3">
+            {scoreRows.map(([employee, score]) => (
+              <div key={employee} className="grid grid-cols-[52px_1fr_32px] items-center gap-3 text-sm">
+                <span>{employee}</span>
+                <div className="h-2 overflow-hidden bg-white/10">
+                  <div className="h-full bg-brand-primary" style={{ width: `${score ?? 0}%` }} />
+                </div>
+                <strong className="text-right">{score ?? 0}</strong>
+              </div>
+            ))}
+          </div>
+          <dl className="space-y-1 text-sm">
+            <div className="flex gap-2">
+              <dt className="w-32 shrink-0 text-white/50">Decision role</dt>
+              <dd className="text-white/80">{contact.job_title ?? '-'}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="w-32 shrink-0 text-white/50">Contact readiness</dt>
+              <dd className="text-white/80">
+                {contact.decision_status
+                  ? `${contact.decision_status.replace('_', ' ')} (${contact.decision_confidence ?? 0}% confidence)`
+                  : '-'}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="w-32 shrink-0 text-white/50">Employee fit</dt>
+              <dd className="capitalize text-white/80">{contact.decision_employee ?? contact.best_employee ?? '-'}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="w-32 shrink-0 text-white/50">Evidence</dt>
+              <dd className="min-w-0 text-white/80">
+                {contact.decision_evidence_url
+                  ? <a className="break-all text-brand-primary hover:underline" href={contact.decision_evidence_url} target="_blank" rel="noreferrer">{contact.decision_evidence_url}</a>
+                  : '-'}
+                {contact.decision_evidence_text && <p className="mt-1 text-xs text-white/55">{contact.decision_evidence_text}</p>}
+              </dd>
+            </div>
+            {contact.decision_review_reason && (
+              <div className="flex gap-2">
+                <dt className="w-32 shrink-0 text-white/50">Review reason</dt>
+                <dd className="text-white/80">{contact.decision_review_reason}</dd>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <dt className="w-32 shrink-0 text-white/50">Approved</dt>
+              <dd className="text-white/80">
+                {contact.prospect_approved_at ? new Date(contact.prospect_approved_at).toLocaleString('en-SG') : '-'}
+              </dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="w-32 shrink-0 text-white/50">Approval hash</dt>
+              <dd className="break-all font-mono text-xs text-white/60">{contact.prospect_approval_hash ?? '-'}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
 
       {/* Classification */}
       <section>
