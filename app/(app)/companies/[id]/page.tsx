@@ -31,6 +31,30 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
         {company.notes && <p className="mt-2 max-w-2xl text-sm text-white/70">{company.notes}</p>}
       </div>
 
+      {(company.address || company.discovery_source_url) && (
+        <section>
+          <h2 className="mb-2 font-display text-lg">Discovery details</h2>
+          <dl className="space-y-1 text-sm">
+            {company.address && (
+              <div className="flex gap-2">
+                <dt className="w-24 shrink-0 text-white/50">Address</dt>
+                <dd className="text-white/80">{company.address}</dd>
+              </div>
+            )}
+            {company.discovery_source_url && (
+              <div className="flex gap-2">
+                <dt className="w-24 shrink-0 text-white/50">Source</dt>
+                <dd>
+                  <a href={company.discovery_source_url} target="_blank" rel="noreferrer" className="text-brand-primary hover:underline">
+                    Open discovery source
+                  </a>
+                </dd>
+              </div>
+            )}
+          </dl>
+        </section>
+      )}
+
       <section>
         <h2 className="mb-2 font-display text-lg">Contacts</h2>
         {contacts?.length ? (

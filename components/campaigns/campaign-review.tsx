@@ -14,6 +14,7 @@ export function CampaignReview({ campaign, emails }: { campaign: Campaign; email
   const [pending, start] = useTransition()
   const [generating, setGenerating] = useState(false)
   const [previewing, setPreviewing] = useState<string | null>(null)
+  const [liveConfirmation, setLiveConfirmation] = useState('')
 
   const pending_emails = emails.filter((e) => e.status === 'pending')
   const approved_emails = emails.filter((e) => e.status === 'approved')
@@ -61,14 +62,21 @@ export function CampaignReview({ campaign, emails }: { campaign: Campaign; email
 
   async function handleSendAll() {
     if (!approved_emails.length) { toast.error('No approved emails'); return }
-    if (!confirm(`Send ${approved_emails.length} approved emails?`)) return
+    const expected = `SEND ${approved_emails.length} LIVE`
+    if (liveConfirmation !== expected) {
+      toast.error(`Type exactly ${expected}`)
+      return
+    }
 
     start(async () => {
       try {
         const res = await fetch('/api/campaigns/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ campaignEmailIds: approved_emails.map((e) => e.id) }),
+          body: JSON.stringify({
+            campaignEmailIds: approved_emails.map((e) => e.id),
+            confirmation: liveConfirmation,
+          }),
         })
         const data = (await res.json()) as { sent?: number; failed?: number; error?: string }
         if (!res.ok) { toast.error(data.error ?? 'Send failed'); return }
@@ -98,14 +106,23 @@ export function CampaignReview({ campaign, emails }: { campaign: Campaign; email
             <Sparkles size={14} /> {generating ? 'Generating…' : 'Generate'}
           </Button>
         ) : (
-          <Button
-            size="sm"
-            onClick={handleSendAll}
-            disabled={!approved_emails.length || pending}
-            className="gap-1 bg-green-600 text-white hover:bg-green-700"
-          >
-            <Send size={14} /> Send ({approved_emails.length})
-          </Button>
+          <div className="flex items-center gap-2">
+            <input
+              value={liveConfirmation}
+              onChange={(event) => setLiveConfirmation(event.target.value)}
+              placeholder={`SEND ${approved_emails.length} LIVE`}
+              aria-label="Live send confirmation"
+              className="h-8 w-40 rounded-md border border-surface-border bg-black/20 px-2 text-xs text-white"
+            />
+            <Button
+              size="sm"
+              onClick={handleSendAll}
+              disabled={!approved_emails.length || approved_emails.length > 5 || pending}
+              className="gap-1 bg-green-600 text-white hover:bg-green-700"
+            >
+              <Send size={14} /> Send ({approved_emails.length})
+            </Button>
+          </div>
         )}
       </div>
 
