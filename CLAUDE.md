@@ -115,8 +115,16 @@ Supabase dashboard → Auth → URL Configuration → Redirect URLs allow-list:
 
 ### Vercel deployment — decommissioned
 `on3oard-crm.vercel.app` was the original deployment; Cloudflare Workers replaced it as canonical
-on 2026-08-05. The GitHub↔Vercel integration was manually disconnected the same day, so pushes to
-`main` no longer trigger Vercel deploys. The last-built Vercel deployment may remain reachable
-until its owner deletes the project outright (Vercel doesn't tear down a live deployment just
-because the Git integration was unlinked) — that's expected, not a bug. Do not re-add the
-integration; all deploys now go through `npm run cf:build` + `npx wrangler deploy`.
+on 2026-08-05. The Vercel GitHub App was uninstalled from `soveroy/On3oard-CRM` (GitHub →
+Settings → Applications → Vercel → Uninstall) the same day, so pushes to `main` no longer trigger
+Vercel deploys — confirmed by Vercel disappearing from the installed-apps list at
+`github.com/settings/installations`.
+
+`on3oard-crm.vercel.app` may still respond and serve the last build for a while — uninstalling the
+GitHub App stops future deploys but doesn't delete the Vercel project itself, so the site can stay
+reachable until whoever owns that Vercel account deletes the project outright. That account wasn't
+reachable from this machine's `vercel` CLI login, so full teardown is pending manual action by its
+owner. Not a bug, not urgent — just not fully torn down yet.
+
+Do not re-add the Vercel↔GitHub integration. All deploys now go through
+`npm run cf:build` + `npx wrangler deploy`.
