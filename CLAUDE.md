@@ -109,7 +109,13 @@ Add the Worker URL's callback route to:
 Supabase dashboard → Auth → URL Configuration → Redirect URLs allow-list:
 `https://on3oard-crm.on3oard.workers.dev/auth/callback`
 
-### Vercel deployment (still active, separate from Cloudflare)
-`on3oard-crm.vercel.app` remains deployed independently via Vercel's own Next.js build — it is not
-affected by anything in this section and doesn't need `cf:build`/wrangler. Both deployments can
-coexist; decommission one only if asked.
+### Canonical deployment
+`https://on3oard-crm.on3oard.workers.dev` is the standardized production URL — use this everywhere
+(bookmarks, Supabase redirect allow-list, docs, mobile).
+
+### Vercel deployment — being decommissioned
+`on3oard-crm.vercel.app` was the original deployment; Cloudflare Workers has replaced it as of
+2026-08-05. It is still technically live (not yet disconnected — the Vercel account that owns it
+is not accessible from this machine's CLI login, so the GitHub↔Vercel integration or the Vercel
+project itself needs to be removed manually by whoever holds that account). Once disconnected,
+delete this section.

@@ -15,7 +15,7 @@ export default function LoginPage() {
       return
     }
     const supabase = createClient()
-    const siteUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://on3oard-crm.vercel.app')
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_SITE_URL || 'https://on3oard-crm.on3oard.workers.dev')
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: `${siteUrl}/auth/callback` },
