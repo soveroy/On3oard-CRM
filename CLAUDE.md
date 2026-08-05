@@ -110,12 +110,13 @@ Supabase dashboard → Auth → URL Configuration → Redirect URLs allow-list:
 `https://on3oard-crm.on3oard.workers.dev/auth/callback`
 
 ### Canonical deployment
-`https://on3oard-crm.on3oard.workers.dev` is the standardized production URL — use this everywhere
+`https://on3oard-crm.on3oard.workers.dev` is the one and only production URL — use this everywhere
 (bookmarks, Supabase redirect allow-list, docs, mobile).
 
-### Vercel deployment — being decommissioned
-`on3oard-crm.vercel.app` was the original deployment; Cloudflare Workers has replaced it as of
-2026-08-05. It is still technically live (not yet disconnected — the Vercel account that owns it
-is not accessible from this machine's CLI login, so the GitHub↔Vercel integration or the Vercel
-project itself needs to be removed manually by whoever holds that account). Once disconnected,
-delete this section.
+### Vercel deployment — decommissioned
+`on3oard-crm.vercel.app` was the original deployment; Cloudflare Workers replaced it as canonical
+on 2026-08-05. The GitHub↔Vercel integration was manually disconnected the same day, so pushes to
+`main` no longer trigger Vercel deploys. The last-built Vercel deployment may remain reachable
+until its owner deletes the project outright (Vercel doesn't tear down a live deployment just
+because the Git integration was unlinked) — that's expected, not a bug. Do not re-add the
+integration; all deploys now go through `npm run cf:build` + `npx wrangler deploy`.
