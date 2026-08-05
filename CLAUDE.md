@@ -6,7 +6,7 @@ Built per `../docs/superpowers/plans/2026-06-05-on3oard-crm.md`.
 ## Stack
 Next.js 14 (App Router, TS strict) · Tailwind + shadcn/ui · Supabase (Postgres/Auth/RLS/Realtime) ·
 Anthropic Claude (`claude-sonnet-4-20250514`, server-only) · Recharts · @dnd-kit · Zod ·
-Vitest + Testing Library · Playwright · Cloudflare Pages.
+Vitest + Testing Library · Playwright · Cloudflare Workers (via OpenNext).
 
 ## Brand
 Primary `#ff914d`, accent `#f93f58`, navy base `#0D1B2A`. Display font Syne, body DM Sans.
@@ -39,43 +39,77 @@ When a live project exists, regenerate it:
 2. Apply migrations: either `supabase link` + `supabase db push`, or paste each file (0001→0003) into
    the SQL editor in order.
 3. (Dev only) run `supabase/seed.sql` for the PNH + NUP demo data. **Do NOT seed production.**
-4. Auth → URL Configuration: add `http://localhost:3000/auth/callback` and the Cloudflare URL to the
+4. Auth → URL Configuration: add `http://localhost:3030/auth/callback` and the Cloudflare Worker URL to the
    redirect allow-list. Enable the Email (magic link) provider.
-5. Add `ANTHROPIC_API_KEY` to `.env.local` (and to Cloudflare Pages env as an encrypted var at deploy).
+5. Add `ANTHROPIC_API_KEY` to `.env.local` (and as a Cloudflare Worker secret via `wrangler secret put` at deploy).
 
 ### Current mode
-Built in **offline/local-buildable** mode: `.env.local` holds placeholder values so `npm run build`
-and `npm run dev` work without live services. Live auth, AI streaming, and deploy smoke tests are
-pending the credential hand-off above.
+Live: Supabase project provisioned, migrations 0001–0008 applied, and the app is deployed to
+Cloudflare Workers (see below). `.env.local` holds real keys for local dev.
 
-## Cloudflare Pages deploy
+## Cloudflare Workers deploy (via OpenNext)
+
+The project deploys to a **Cloudflare Worker** (not Cloudflare Pages) using the OpenNext adapter
+(`@opennextjs/cloudflare`). `@cloudflare/next-on-pages` was tried first but is deprecated upstream
+and peer-requires Next ≥ 14.3 — a version that doesn't exist (Next jumped straight from 14.2 to 15).
+OpenNext supports Next 14.2 directly, so it replaced next-on-pages entirely.
+
+**Live URL:** https://on3oard-crm.on3oard.workers.dev
 
 ### Build & deploy
-- Build command: `npm run pages:build` — runs `npx @cloudflare/next-on-pages` and produces `.vercel/output/static`.
-- Deploy: `npx wrangler pages deploy .vercel/output/static`
-- `wrangler.toml` sets `compatibility_flags = ["nodejs_compat"]`, which is required by the two AI route handlers that declare `export const runtime = 'nodejs'`.
+```bash
+npm run cf:build     # opennextjs-cloudflare build --dangerouslyUseUnsupportedNextVersion
+                      # produces .open-next/worker.js + .open-next/assets
+npx wrangler deploy   # uploads the worker + assets to Cloudflare
+```
+- `npm run cf:preview` — run the built worker locally via Miniflare before deploying.
+- `wrangler.toml`: `main = ".open-next/worker.js"`, `[assets]` binds `.open-next/assets`,
+  `compatibility_flags = ["nodejs_compat"]` (required by the AI route handlers that declare
+  `export const runtime = 'nodejs'`).
+- `.open-next/` and `.wrangler/` are build artifacts — gitignored, never commit them.
 
-### KNOWN ISSUE — adapter version mismatch
-`@cloudflare/next-on-pages@1.13.16` peer-requires Next ≥ 14.3 (this project uses 14.2.35) and is
-deprecated upstream in favour of the OpenNext Cloudflare adapter (`@opennextjs/cloudflare`).
-**Before first deploy, either:**
-1. Bump Next.js to ≥ 14.3 (`npm install next@latest`), or
-2. Migrate to the OpenNext adapter (`npm install @opennextjs/cloudflare` and follow its docs).
+### KNOWN ISSUE — unsupported Next.js version
+Next 14.2.35 is past OpenNext's officially supported window (majors are supported ~2 years from
+release; 14.2 predates that cutoff for this adapter version). The build only proceeds because
+`cf:build` passes `--dangerouslyUseUnsupportedNextVersion`. It builds and runs correctly, but the
+clean long-term fix is upgrading to Next 15 — treat that as a separate, deliberate migration, not
+a quick patch.
 
-Validate that `npm run pages:build` succeeds without errors before deploying.
+### KNOWN ISSUE — Windows build warning
+OpenNext prints `OpenNext is not fully compatible with Windows` and recommends WSL. The build has
+succeeded from a native Windows shell in practice, but if a future build fails with an obscure
+error, try it under WSL before deep-diving.
 
-### Environment variables
-Set these in the Cloudflare Pages dashboard (Settings → Environment variables).
-Copy names from `.env.local.example`:
+### Environment variables / secrets
+`NEXT_PUBLIC_*` vars are inlined into the client bundle **at build time** — editing them in
+`.env.local` requires an `npm run cf:build` + `npx wrangler deploy` to take effect; setting them
+as a Worker secret alone does nothing for the client bundle. Server-only vars (no `NEXT_PUBLIC_`
+prefix) are read at runtime from Worker secrets.
 
-| Variable | Type | Notes |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Plain | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Plain | Supabase anon/public key |
-| `NEXT_PUBLIC_SITE_URL` | Plain | The Pages deployment URL (e.g. `https://on3oard-crm.pages.dev`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Encrypted secret | Supabase service role key |
-| `ANTHROPIC_API_KEY` | Encrypted secret | Anthropic API key |
+Set secrets with:
+```bash
+echo "<value>" | npx wrangler secret put <NAME>
+```
+
+| Variable | Notes |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Baked in at build time |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Baked in at build time |
+| `NEXT_PUBLIC_SITE_URL` | Baked in at build time — must equal the deployed Worker URL for magic-link redirects to work |
+| `SUPABASE_SERVICE_ROLE_KEY` | Runtime secret |
+| `ANTHROPIC_API_KEY` | Runtime secret |
+| `OPENAI_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` / `DEEPSEEK_API_KEY` | Runtime secrets, multi-provider AI |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL` | Runtime secrets |
+| `CRM_INTEGRATION_TOKEN` | Runtime secret |
+
+All secrets above are already set on the live Worker. None are committed to git.
 
 ### Supabase Auth redirect allow-list
-After deploying, add the Pages URL (e.g. `https://on3oard-crm.pages.dev`) to:
-Supabase dashboard → Auth → URL Configuration → Redirect URLs allow-list.
+Add the Worker URL's callback route to:
+Supabase dashboard → Auth → URL Configuration → Redirect URLs allow-list:
+`https://on3oard-crm.on3oard.workers.dev/auth/callback`
+
+### Vercel deployment (still active, separate from Cloudflare)
+`on3oard-crm.vercel.app` remains deployed independently via Vercel's own Next.js build — it is not
+affected by anything in this section and doesn't need `cf:build`/wrangler. Both deployments can
+coexist; decommission one only if asked.
