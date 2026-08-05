@@ -121,7 +121,7 @@ async function importProspect(
   for (const decisionMaker of importedContacts) {
     const email = decisionMaker.email.trim().toLowerCase()
     const key = contactKey(prospect, decisionMaker.name, decisionMaker.role, email)
-    let contactQuery = supabase
+    const contactQuery = supabase
       .from('contacts')
       .select('id,do_not_contact,full_name')
       .eq('prospect_contact_key', key)
