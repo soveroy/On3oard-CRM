@@ -1,13 +1,14 @@
 'use server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { DEFAULT_MODEL } from '@/lib/ai/models'
 
 const createCampaignSchema = z.object({
   name: z.string().min(1, 'Campaign name required'),
   brief: z.string().min(10, 'Brief must be at least 10 chars'),
   subject_line: z.string().min(1, 'Subject line required'),
   audience: z.enum(['prospects', 'active', 'past', 'all']),
-  model: z.string().default('claude-sonnet-4'),
+  model: z.string().default(DEFAULT_MODEL),
 })
 
 type CreateCampaignInput = z.infer<typeof createCampaignSchema>

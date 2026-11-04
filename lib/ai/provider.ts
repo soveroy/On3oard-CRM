@@ -22,3 +22,12 @@ export function resolveLanguageModel(modelId: string): { model: LanguageModel; m
 export function providerConfigured(meta: AiModel): boolean {
   return Boolean(process.env[PROVIDER_ENV[meta.provider]])
 }
+
+/**
+ * Provider options for a call. Claude 5.5 models think before answering by
+ * default, and that thinking counts toward the output-token limit; a lower
+ * effort keeps it short for routine writing. Other providers get nothing.
+ */
+export function providerOptionsFor(meta: AiModel, effort: 'low' | 'medium' | 'high' = 'low') {
+  return meta.provider === 'anthropic' ? { anthropic: { effort } } : undefined
+}
