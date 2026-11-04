@@ -5,7 +5,8 @@ import { INDUSTRIES, COMPANY_SIZES, LEAD_SOURCES } from '@/lib/constants'
 export const runtime = 'nodejs'
 
 // Enrichment uses Claude's server-side web_search tool, so it's Anthropic-only.
-const MODEL = 'claude-sonnet-4-20250514'
+// (claude-sonnet-4-20250514 was retired by Anthropic on 15 Jun 2026.)
+const MODEL = 'claude-sonnet-5-5'
 
 function extractJson(text: string): Record<string, unknown> | null {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/)
@@ -54,22 +55,32 @@ export async function POST(req: Request) {
   if (!query?.trim()) return Response.json({ error: 'Enter something to research.' }, { status: 400 })
   if (entity !== 'company' && entity !== 'contact') return Response.json({ error: 'Invalid entity.' }, { status: 400 })
 
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    defaultHeaders: { 'anthropic-beta': 'web-search-2025-03-05' },
-  })
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   try {
-    const msg = await anthropic.messages.create({
+    const msg = await anthropic.beta.messages.create({
       model: MODEL,
-      max_tokens: 1024,
-      // server-side web search tool (Anthropic runs the searches and returns a synthesized answer)
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }] as never,
+      // Room for thinking (on by default on Claude Sonnet 5.5, sharing this
+      // limit) plus the JSON answer; only tokens actually used are billed.
+      max_tokens: 8000,
+      output_config: { effort: 'low' },
+      // Server-side web search (GA, no beta header). The 20260209 version
+      // filters results before they reach the model, which cuts input tokens.
+      tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 5 }],
       messages: [{ role: 'user', content: entity === 'company' ? companyPrompt(query) : contactPrompt(query) }],
+      // Server-side refusal fallback: if Sonnet 5.5's safety classifier
+      // declines a benign lookup, the API re-runs it on a suitable model in
+      // the same call. The pinned SDK predates the typed parameter.
+      betas: ['server-side-fallback-2026-07-01'],
+      ...({ fallbacks: 'default' } as object),
     })
 
+    if (msg.stop_reason === 'refusal') {
+      return Response.json({ error: 'Claude declined to research this. Try rephrasing, or fill in the details manually.' }, { status: 422 })
+    }
+
     const text = msg.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text')
       .map((b) => b.text)
       .join('\n')
 

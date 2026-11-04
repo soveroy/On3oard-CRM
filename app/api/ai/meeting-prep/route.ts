@@ -2,7 +2,7 @@ import { streamText } from 'ai'
 import { createClient } from '@/lib/supabase/server'
 import { buildMeetingPrepPrompt } from '@/lib/ai/prompts'
 import { getModel, PROVIDER_ENV } from '@/lib/ai/models'
-import { resolveLanguageModel, providerConfigured } from '@/lib/ai/provider'
+import { resolveLanguageModel, providerConfigured, providerOptionsFor } from '@/lib/ai/provider'
 
 export const runtime = 'nodejs'
 
@@ -40,6 +40,11 @@ export async function POST(req: Request) {
   })
 
   const { model: languageModel } = resolveLanguageModel(meta.id)
-  const result = streamText({ model: languageModel, prompt, maxOutputTokens: 1024 })
+  // 4096 leaves room for Claude 5.5's thinking, which shares this limit with
+  // the reply; only tokens actually generated are billed.
+  const result = streamText({
+    model: languageModel, prompt, maxOutputTokens: 4096,
+    providerOptions: providerOptionsFor(meta, 'medium'),
+  })
   return result.toTextStreamResponse()
 }

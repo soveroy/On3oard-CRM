@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getModel, PROVIDER_ENV } from '@/lib/ai/models'
-import { resolveLanguageModel, providerConfigured } from '@/lib/ai/provider'
+import { resolveLanguageModel, providerConfigured, providerOptionsFor } from '@/lib/ai/provider'
 import { generateText } from 'ai'
 import { suppressionReason } from '@/lib/integrations/suppression'
 
@@ -76,6 +76,7 @@ export async function POST(req: Request) {
   // Generate emails in parallel (cap at 10 concurrent to avoid rate limits)
   const BATCH = 10
   let generated = 0
+  let failed = 0
 
   for (let i = 0; i < eligibleContacts.length; i += BATCH) {
     const batch = eligibleContacts.slice(i, i + BATCH)
@@ -86,7 +87,12 @@ export async function POST(req: Request) {
       const email = (c.emails ?? [])[0]
       if (!email) return
       const prompt = emailPrompt(campaign.brief, campaign.subject_line, { full_name: c.full_name, job_title: c.job_title, company })
-      const { text } = await generateText({ model: languageModel, prompt })
+      const { text, finishReason } = await generateText({
+        model: languageModel, prompt, providerOptions: providerOptionsFor(meta, 'low'),
+      })
+      // A declined request ('content-filter') or an empty reply must not be
+      // saved as a blank email for someone to approve.
+      if (finishReason === 'content-filter' || !text.trim()) throw new Error('No email generated')
       await supabase.from('campaign_emails').insert({
         campaign_id: campaignId,
         contact_id: c.id,
@@ -97,9 +103,21 @@ export async function POST(req: Request) {
         status: 'pending',
       })
       generated++
-    }))
+    })).then((results) => {
+      failed += results.filter((r) => r.status === 'rejected').length
+    })
+  }
+
+  // Every generation failing (e.g. a model the provider no longer serves) used
+  // to leave the campaign in 'review' with zero emails and no error. Surface it.
+  if (generated === 0 && failed > 0) {
+    await supabase.from('email_campaigns').update({ status: 'draft' }).eq('id', campaignId)
+    return Response.json(
+      { error: `Email generation failed for all ${failed} contacts with ${meta.label}. Try again or pick another model.` },
+      { status: 502 },
+    )
   }
 
   await supabase.from('email_campaigns').update({ status: 'review' }).eq('id', campaignId)
-  return Response.json({ generated })
+  return Response.json({ generated, failed })
 }

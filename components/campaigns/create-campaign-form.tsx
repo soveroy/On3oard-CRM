@@ -7,14 +7,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { AI_MODELS } from '@/lib/ai/models'
+import { AI_MODELS, DEFAULT_MODEL } from '@/lib/ai/models'
 import { createCampaign } from '@/app/(app)/campaigns/actions'
 
 export function CreateCampaignForm() {
   const router = useRouter()
   const [pending, start] = useTransition()
   const [audience, setAudience] = useState('all')
-  const [model, setModel] = useState('claude-sonnet-4')
+  const [model, setModel] = useState(DEFAULT_MODEL)
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
